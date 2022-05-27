@@ -3,7 +3,7 @@
 ## 介紹: 新增、刪除、重命名機碼或機碼項目
 
 
-- ## 機碼-[[參考]](https://docs.microsoft.com/zh-tw/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
+- ## 機碼 [[參考]](https://docs.microsoft.com/zh-tw/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
 
 **新增機碼:**
 ```
@@ -35,7 +35,7 @@ Rename-Item -Path Registry::"Reg_Keys" -NewName '新名稱' (若要顯示重新�
 </br>
 
 
-- ## 機碼項目-[[參考]](https://docs.microsoft.com/zh-tw/powershell/scripting/samples/working-with-registry-entries?view=powershell-7.2)
+- ## 機碼項目 [[參考]](https://docs.microsoft.com/zh-tw/powershell/scripting/samples/working-with-registry-entries?view=powershell-7.2)
 
 
 **新增項目:**
