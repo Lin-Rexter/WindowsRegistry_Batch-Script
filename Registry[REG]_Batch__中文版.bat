@@ -106,7 +106,11 @@ ECHO.
 ECHO 覆蓋中...
 ECHO.
 powershell -command New-Item -Path Registry::'%Reg_Keys%' -Force
-IF %ERRORLEVEL% NEQ 0 (ECHO. && ECHO 覆蓋失敗!)ELSE (ECHO. && ECHO 覆蓋成功!)
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO. && ECHO 覆蓋失敗!
+)ELSE (
+	ECHO. && ECHO 覆蓋成功!
+)
 EXIT /B
 
 
@@ -190,6 +194,7 @@ IF ERRORLEVEL 2 (
 EXIT /B
 
 :Delete-Registry_SubKeys-Del-Ask
+CLS
 CALL :ALL_Registry_SubKeys
 CHOICE /C 4321 /N /M "指定機碼下存在其他子機碼! [1]刪除指定子機碼 [2]刪除所有子機碼[不包括指定機碼] [3]刪除所有子機碼[包括指定機碼] [4]取消操作: "
 IF ERRORLEVEL 4 (
@@ -318,7 +323,7 @@ EXIT /B
 
 REM 確認機碼內是否存在項目值
 :Is_Exist_Registry_Keys_Value
-for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_Keys%").length"') do SET Sum2=%%k > nul 2>&1
+for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_Keys%" /s).length"') do SET Sum2=%%k > nul 2>&1
 IF %Sum2% NEQ 0 (
 	ECHO --------------------------------------------------
 	ECHO 機碼內有項目值!
@@ -366,13 +371,15 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-CHOICE /C 4321 /N /M "[1]新增機碼項目 [2]刪除機碼項目 [3]重新命名機碼項目 [4]返回菜單: "
-IF ERRORLEVEL 4 (
+CHOICE /C 54321 /N /M "[1]新增機碼項目 [2]刪除機碼項目 [3]重新命名機碼項目 [4]更改機碼項目值 [5]返回菜單: "
+IF ERRORLEVEL 5 (
 	GOTO Add-Registry_Vulue-Ask
-)ELSE IF ERRORLEVEL 3 (
+)ELSE IF ERRORLEVEL 4 (
 	GOTO Delete-Registry_Vulue-Ask
-)ELSE IF ERRORLEVEL 2 (
+)ELSE IF ERRORLEVEL 3 (
 	GOTO Rename-Registry_Vulue-Ask
+)ELSE IF ERRORLEVEL 2 (
+	GOTO Change-Registry_Vulue-Ask
 )ELSE IF ERRORLEVEL 1 (
 	GOTO MAIN
 )
@@ -614,6 +621,101 @@ ECHO.
 ECHO 重新命名中...
 ECHO.
 powershell -command Rename-ItemProperty -Path Registry::"%Reg_Value_Path%" -Name '"%Reg_Vulue-Name%"' -NewName '"%Reg_Vulue-NewName%"' -passthru
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO. && ECHO 更改失敗!
+)ELSE (
+	ECHO. && ECHO 更改成功!
+)
+EXIT /B
+
+
+::REM =======================================Change-Registry_Vulue===================================
+
+
+:Change-Registry_Vulue-Ask
+CLS
+ECHO.
+ECHO =======================================================
+ECHO.
+SET "Reg_Value_Path="
+SET /P Reg_Value_Path="請輸入要更改的機碼項目值路徑[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Value_Path (
+	ECHO.
+	ECHO 請輸入機碼項目路徑!
+	ECHO.
+	PAUSE 
+	GOTO Change-Registry_Vulue-Ask
+)ELSE IF /I "%Reg_Value_Path%" EQU "B" (
+	GOTO Switch_Registry_Value
+)
+ECHO.
+
+CALL :Is_Exist_Registry_Value_Path REM 確認機碼路徑是否存在
+IF %ERRORLEVEL% NEQ 0 (
+	REM 不存在，停止操作!
+	ECHO.
+	ECHO 不存在機碼路徑，請重新輸入!
+)ELSE (
+	REM 存在，繼續執行操作!
+	CALL :Change-Registry_Vulue-Name-Ask
+)
+ECHO. && PAUSE && GOTO Change-Registry_Vulue-Ask
+
+:Change-Registry_Vulue-Name-Ask
+CLS
+ECHO.
+ECHO =======================================================
+ECHO.
+CALL :ALL_Registry_Value
+SET "Reg_Vulue-Name="
+SET /P Reg_Vulue-Name="請輸入要更改的機碼項目名稱[輸入E 返回]: "
+IF NOT DEFINED Reg_Vulue-Name (
+	ECHO.
+	ECHO 請輸入機碼項目名稱!
+	ECHO.
+	PAUSE
+	GOTO Change-Registry_Vulue-Name-Ask
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "E" (
+	GOTO Change-Registry_Vulue-Ask
+)
+
+CALL :Is_Exist_Registry_Value
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO.
+	ECHO 項目名不存在，請重新輸入!
+	ECHO.
+	PAUSE
+	GOTO Change-Registry_Vulue-Name-Ask
+)ELSE (
+	CALL :Change-Registry_Vulue-NewValue-Ask
+)
+EXIT /B
+
+:Change-Registry_Vulue-NewValue-Ask
+ECHO.
+ECHO =======================================================
+ECHO.
+SET "Reg_Vulue-NewValue="
+SET /P Reg_Vulue-NewValue="請輸入新的的項目值[輸入E 返回]: "
+IF NOT DEFINED Reg_Vulue-NewValue (
+	ECHO.
+	ECHO 請輸入新項目值!
+	ECHO.
+	PAUSE
+	GOTO Change-Registry_Vulue-NewValue-Ask
+)ELSE IF /I "%Reg_Vulue-NewValue%" EQU "E" (
+	GOTO Change-Registry_Vulue-Name-Ask
+)
+CALL :Change-Registry_Vulue
+EXIT /B
+
+:Change-Registry_Vulue
+ECHO.
+ECHO =======================================================
+ECHO.
+ECHO 更改中...
+ECHO.
+powershell -command Set-ItemProperty -Path Registry::"%Reg_Value_Path%" -Name '"%Reg_Vulue-Name%"' -Value '"%Reg_Vulue-NewValue%"' -passthru
 IF %ERRORLEVEL% NEQ 0 (
 	ECHO. && ECHO 更改失敗!
 )ELSE (

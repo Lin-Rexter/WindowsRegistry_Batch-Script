@@ -7,16 +7,17 @@ GOTO MAIN
 :MAIN
 CLS
 ECHO.
+ECHO.
 ECHO ==============================================================
-ECHO                           Choose
+ECHO                       Choose the function
 ECHO ==============================================================
 ECHO.
 ECHO --------------------------------------------------------------
 ECHO [1] Management Registry Keys
-ECHO [2] Management Registry Value
+ECHO [2] Management Registry Entries
 ECHO --------------------------------------------------------------
 ECHO.
-CHOICE /C 21 /N /M "Choose Function[1~2]: "
+CHOICE /C 21 /N /M "Choose the function[1~2]:"
 IF ERRORLEVEL 2 (
 	GOTO Switch_Registry_Keys
 )ELSE (
@@ -34,7 +35,7 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-CHOICE /C 4321 /N /M "[1]Add Registry_Keys [2]Delete Registry_Keys [3]Rename Registry_Keys [4]Back Menu: "
+CHOICE /C 4321 /N /M "[1]Create Registry Keys [2]Delete Registry Keys [3]Rename Registry Keys [4]Back Menu: "
 IF ERRORLEVEL 4 (
 	GOTO Add-Registry_Keys-Ask
 )ELSE IF ERRORLEVEL 3 (
@@ -54,19 +55,28 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Keys="Input Reg_Keys Path: "
-IF "%Reg_Keys%" EQU "" (ECHO. && ECHO Plese Input Reg_Keys Path! && PAUSE && GOTO Add-Registry_Keys)
+SET "Reg_Keys="
+SET /P Reg_Keys="Please enter the path of the registry keys[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Keys (
+	ECHO.
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE
+	GOTO Add-Registry_Keys-Ask
+)ELSE IF /I "%Reg_Keys%" EQU "B" (
+	GOTO Switch_Registry_Keys
+)
 ECHO.
 
-CALL :Is_Exist_Registry_Keys REM Confirm Path Exist
+CALL :Is_Exist_Registry_Keys REM Check the existence of the registry keys
 IF %ERRORLEVEL% NEQ 0 (
-	REM No exist than create
+	REM Not exist, create it
 	CALL :Add-Registry_Keys-Add
 )ELSE (
-	REM Exist than ask overwrite origin Keys
+	REM Exist, Ask to overwrite it
 	CALL :Add-Registry_Keys-OverWrite-Ask
 )
-ECHO. && PAUSE && GOTO MAIN
+ECHO. && PAUSE && GOTO Add-Registry_Keys-Ask
 
 :Add-Registry_Keys-Add
 ECHO.
@@ -74,20 +84,20 @@ ECHO Create...
 ECHO.
 powershell -command New-Item -Path Registry::'%Reg_Keys%'
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Create Fail!
+	ECHO. && ECHO Create Registry Keys Fail! 
 )ELSE (
-	ECHO. && ECHO Create Success!
+	ECHO. && ECHO Create Registry Keys Success!
 )
 EXIT /B
 
 :Add-Registry_Keys-OverWrite-Ask
 ECHO.
-CHOICE /C NY /N /M "Current exist same Keys! Do you want to overwrite?[Y/N]: "
+CHOICE /C NY /N /M "Registry Keys already exist, do you want to overwrite it?[Y/N]: "
 IF ERRORLEVEL 2 (
 	CALL :Add-Registry_Keys-OverWrite
 )ELSE IF ERRORLEVEL 1 (
 	ECHO.
-	ECHO Cancel Success!
+	ECHO Successfully canceled!
 )
 EXIT /B
 
@@ -97,9 +107,9 @@ ECHO Overwrite...
 ECHO.
 powershell -command New-Item -Path Registry::'%Reg_Keys%' -Force
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Overwrite Fail!
+	ECHO. && ECHO Overwrite Registry Keys Fail!
 )ELSE (
-	ECHO. && ECHO Overwrite Success!
+	ECHO. && ECHO Overwrite Registry Keys Success!
 )
 EXIT /B
 
@@ -112,40 +122,81 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Keys="Input Reg_Keys Path: "
-IF "%Reg_Keys%" EQU "" (ECHO. && ECHO Plese Input Reg_Keys Path! && PAUSE && GOTO Delete-Registry_Keys-Ask)
+SET "Reg_Keys="
+SET /P Reg_Keys="Please enter the path of the registry keys[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Keys (
+	ECHO. 
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE
+	GOTO Delete-Registry_Keys-Ask
+)ELSE IF /I "%Reg_Keys%" EQU "B" (
+	GOTO Switch_Registry_Keys
+)
 ECHO.
 
-CALL :Is_Exist_Registry_Keys REM Confirm Path Exist
+CALL :Is_Exist_Registry_Keys REM Check the existence of the registry keys
 IF %ERRORLEVEL% NEQ 0 (
-	REM No exist, no need to delete!
+	REM Not exist, no need to delete
 	ECHO.
-	ECHO Path no exist¡ANo need to delete!
+	ECHO Registry Keys does not exist!
 )ELSE (
-	REM Exist¡ACan delete!
+	REM Exist, delete it
 	CALL :Delete-Registry_Keys-Del-Ask
 )
-ECHO. && PAUSE && GOTO MAIN
+ECHO. && PAUSE && GOTO Delete-Registry_Keys-Ask
 
 :Delete-Registry_Keys-Del-Ask
+CLS
+ECHO.
+ECHO =======================================================
 ECHO.
 CALL :Is_Exist_Registry_SubKeys
 IF %Sum% == 0 (
-	REM No exist subkeys¡Acan delete!
+	REM No subkeys, delete it
 	ECHO.
-	ECHO Confirmed no subkeys in Keys¡Adelete...
+	ECHO Checked no subkeys in the registry keys!
 	ECHO.
-	TIMEOUT /T 2 /NOBREAK > nul 2>&1
+)ELSE (
+	REM Exist subkeys, ask to delete it
+	CALL :Delete-Registry_SubKeys-Del-Ask
+)
+
+ECHO.
+CALL :Is_Exist_Registry_Keys_Value
+IF %Sum2% EQU 0 (
+	REM No Entries, delete it
+	ECHO.
+	ECHO Checked no registry entries in the registry keys, 3 seconds later will delete it!
+	ECHO.
+	TIMEOUT /T 3 /NOBREAK > nul 2>&1
 	CALL :Delete-Registry_Keys_And_SubKeys-Del
 )ELSE (
-	REM Subkeys is exist¡AConfirm del!
-	CALL :Delete-Registry_SubKeys-Del-Ask
+	REM Exist Entries, ask to delete it
+	ECHO.
+	CALL :Delete-Registry_Vulues-Del-Ask
+)
+EXIT /B
+
+:Delete-Registry_Vulues-Del-Ask
+CHOICE /C NY /N /M "Registry Entries already exist, do you want to delete?[Y/N]: "
+IF ERRORLEVEL 2 (
+	SET Reg_Value_Path="%Reg_Keys%"
+	CALL :Del-Registry_Vulue-Name-Ask
+	GOTO Delete-Registry_Keys-Del-Ask
+)ELSE IF ERRORLEVEL 1 (
+	ECHO.
+	ECHO Successfully canceled,3 seconds later will delete it!
+	ECHO.
+	TIMEOUT /T 3 /NOBREAK > nul 2>&1
+	CALL :Delete-Registry_Keys_And_SubKeys-Del
 )
 EXIT /B
 
 :Delete-Registry_SubKeys-Del-Ask
+CLS
 CALL :ALL_Registry_SubKeys
-CHOICE /C 4321 /N /M "The keys includes others subkeys! [1]Delete designate subkeys [2]Delete all subkeys [3]Delete all subkeys and keys [4]Back menu: "
+CHOICE /C 4321 /N /M "The keys has subkeys! [1]Delete one subkey [2]Delete all subkeys [3]Delete all subkeys and Keys [4]canceled: "
 IF ERRORLEVEL 4 (
 	CALL :Delete-Registry_Some_SubKeys-Del
 )ELSE IF ERRORLEVEL 3 (
@@ -153,9 +204,9 @@ IF ERRORLEVEL 4 (
 )ELSE IF ERRORLEVEL 2 (
 	CALL :Delete-Registry_Keys_And_SubKeys-Del
 )ELSE IF ERRORLEVEL 1 (
-	GOTO MAIN
+	ECHO.
+	ECHO Successfully canceled!
 )
-
 EXIT /B
 
 :Delete-Registry_Some_SubKeys-Del
@@ -163,16 +214,25 @@ CLS
 ECHO.
 ECHO =======================================================
 CALL :ALL_Registry_SubKeys
-SET /P Reg_SubKeys="Input Reg_SubKeys Name: "
-IF "%Reg_Keys%" EQU "" (ECHO. && ECHO Plese Input Reg_SubKeys Name! && PAUSE && GOTO Delete-Registry_Some_SubKeys-Del)
-ECHO.
-ECHO Delete subkeys...
+SET "Reg_SubKeys="
+SET /P Reg_SubKeys="Please enter the name of the subkeys you want to delete[B/b:Back Menu]: "
+IF NOT DEFINED Reg_SubKeys (
+	ECHO.
+	ECHO Please enter the name of the subkeys!
+	ECHO.
+	PAUSE
+	GOTO Delete-Registry_Some_SubKeys-Del
+)ELSE IF /I "%Reg_SubKeys%" EQU "B" (
+	GOTO Switch_Registry_Keys
+)
 ECHO.
 powershell -command Remove-Item -Path Registry::'%Reg_SubKeys%'
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Delete fail!
+	ECHO.
+	ECHO Delete Registry SubKeys Fail!
 )ELSE (
-	ECHO. && ECHO Delete success!
+	ECHO.
+	ECHO Delete Registry SubKeys Success!
 )
 EXIT /B
 
@@ -181,13 +241,15 @@ CLS
 ECHO.
 ECHO =======================================================
 CALL :ALL_Registry_SubKeys
-ECHO Delete all subkeys...
+ECHO Delete all subkeys in the registry keys!
 ECHO.
 powershell -command Remove-Item -Path Registry::'%Reg_Keys%\*' -Recurse
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Delete fail!
+	ECHO.
+	ECHO Delete all subkeys in the registry keys Fail!
 )ELSE (
-	ECHO. && ECHO Delete success!
+	ECHO.
+	ECHO Delete all subkeys in the registry keys Success!
 )
 EXIT /B
 
@@ -195,13 +257,15 @@ EXIT /B
 CLS
 ECHO.
 ECHO =======================================================
-ECHO Delete all subkeys and keys...
+ECHO Delete the keys...
 ECHO.
 powershell -command Remove-Item -Path Registry::'%Reg_Keys%'
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Delete fail!
+	ECHO.
+	ECHO Delete Fail!
 )ELSE (
-	ECHO. && ECHO Delete success!
+	ECHO.
+	ECHO Delete Success!
 )
 EXIT /B
 
@@ -214,20 +278,29 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Keys="Input Reg_Keys Path: "
-IF "%Reg_Keys%" EQU "" (ECHO. && ECHO Plese Input Reg Keys Path! && PAUSE && GOTO Rename-Registry_Keys-Ask)
+SET "Reg_Keys="
+SET /P Reg_Keys="Please enter the path of the registry keys[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Keys (
+	ECHO. 
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Keys-Ask
+)ELSE IF /I "%Reg_Keys%" EQU "B" (
+	GOTO Switch_Registry_Keys
+)
 ECHO.
 
-CALL :Is_Exist_Registry_Keys REM Confirm Path Exist
+CALL :Is_Exist_Registry_Keys REM Check the existence of the registry keys
 IF %ERRORLEVEL% NEQ 0 (
-	REM No exist,stop run
+	REM Not exist, no need to rename
 	ECHO.
-	ECHO Error path¡APlease input correct path!
+	ECHO Registry Keys path does not exist!
 )ELSE (
-	REM Exist¡AContinue
+	REM Exist, rename it
 	CALL :Rename-Registry_Keys-NewName-Ask
 )
-ECHO. && PAUSE && GOTO MAIN
+ECHO. && PAUSE && GOTO Rename-Registry_Keys-Ask
 
 :Rename-Registry_Keys-NewName-Ask
 CLS
@@ -235,17 +308,26 @@ ECHO.
 ECHO =======================================================
 ECHO.
 CALL :Registry_Keys
-SET /P Reg_keys-NewName="Input Reg_Keys NewName([E] Return ): "
-IF "%Reg_keys-NewName%" EQU "" (
-	ECHO. && ECHO Plese Input Reg_keys NewName! && PAUSE && GOTO Rename-Registry_Keys-NewName-Ask
-)ELSE IF /I "%Reg_keys-NewName%" EQU "E" (
+SET "Reg_keys-NewName="
+SET /P Reg_keys-NewName="Please enter the new name of the registry keys[B/b:Back]: "
+IF NOT DEFINED Reg_keys-NewName (
+	ECHO.
+	ECHO Please enter the new name!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Keys-NewName-Ask
+)ELSE IF /I "%Reg_keys-NewName%" EQU "B" (
 	GOTO Rename-Registry_Keys-Ask
 )
 CALL :Is_Exist_Registry_Other_Keys
 IF %ERRORLEVEL% NEQ 0 (
 	CALL :Rename-Registry_Keys
 )ELSE (
-	ECHO. && ECHO Current have same name¡Aplease input other name && ECHO. && PAUSE && GOTO Rename-Registry_Keys-NewName-Ask
+	ECHO.
+	ECHO The new name already exists, please enter other name!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Keys-NewName-Ask
 )
 EXIT /B
 
@@ -253,13 +335,13 @@ EXIT /B
 ECHO.
 ECHO =======================================================
 ECHO.
-ECHO Rename...
+ECHO Rename the registry keys...
 ECHO.
 powershell -command Rename-Item -Path Registry::"%Reg_Keys%" -NewName '"%Reg_keys-NewName%"' -passthru
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Change fail!
+	ECHO. && ECHO Rename the registry keys Fail!
 )ELSE (
-	ECHO. && ECHO Change success!
+	ECHO. && ECHO Rename the registry keys Success!
 )
 EXIT /B
 
@@ -267,37 +349,49 @@ EXIT /B
 ::REM =======================================Module-Registry_Keys====================================
 
 
-REM Confirm Path Exist
+REM Check the existence of the registry keys
 :Is_Exist_Registry_Keys
 powershell -command Get-item -Path Registry::'%Reg_Keys%' > nul 2>&1
 EXIT /B
 
-REM Confirm Subkeys Exist
+REM Check the existence of the subkeys of the registry keys
 :Is_Exist_Registry_SubKeys
 for /F "delims=" %%i IN ('"powershell -command (Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse).length"') do SET Sum=%%i > nul 2>&1
 EXIT /B
 
-REM [Rename]Confirm have repeated name
+REM Check the existence of the registry entries in the registry keys and subkeys
+:Is_Exist_Registry_Keys_Value
+for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_Keys%" /s).length"') do SET Sum2=%%k > nul 2>&1
+IF %Sum2% NEQ 0 (
+	ECHO --------------------------------------------------
+	ECHO The registry keys or subkeys has the registry entries:
+	ECHO.
+	powershell -command Get-ItemProperty -Path Registry::'%Reg_Keys%'
+	ECHO --------------------------------------------------
+)
+EXIT /B
+
+REM Check the existence of the new name of the registry keys
 :Is_Exist_Registry_Other_Keys
-Set "Reg_keys_Path=%Reg_Keys:~,-1%"
+SET "Reg_keys_Path=%Reg_Keys:~,-1%"
 powershell -command Get-item -Path Registry::'%Reg_keys_Path%%Reg_keys-NewName%' > nul 2>&1
 EXIT /B
 
-REM Show All Subkeys
+REM Show all subkeyss
 :ALL_Registry_SubKeys
 ECHO.
-ECHO Keys's all subkeys
+ECHO The all subkeys of the registry keys:
 ECHO -----------------------------------------
 powershell -command Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse ^| Select-Object Name
-ECHO Total Subkeys:%Sum%
+ECHO Total: %Sum%
 ECHO -----------------------------------------
 ECHO.
 EXIT /B
 
-REM Show keys
+REM Show choose keys
 :Registry_Keys
 ECHO.
-ECHO The keys info
+ECHO The choose of keys
 ECHO -----------------------------------------
 powershell -command Get-Item -Path Registry::'%Reg_Keys%'
 ECHO -----------------------------------------
@@ -315,13 +409,15 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-CHOICE /C 4321 /N /M "[1]Add Registry_Entries [2]Delete Registry_Entries [3]Rename Registry_Entries [4]Back Menu: "
-IF ERRORLEVEL 4 (
+CHOICE /C 54321 /N /M "[1]Add Registry entries [2]Delete Registry entries [3]Rename Registry entries [4]Change Registry entries value[5]Back Menu"
+IF ERRORLEVEL 5 (
 	GOTO Add-Registry_Vulue-Ask
-)ELSE IF ERRORLEVEL 3 (
+)ELSE IF ERRORLEVEL 4 (
 	GOTO Delete-Registry_Vulue-Ask
-)ELSE IF ERRORLEVEL 2 (
+)ELSE IF ERRORLEVEL 3 (
 	GOTO Rename-Registry_Vulue-Ask
+)ELSE IF ERRORLEVEL 2 (
+	GOTO Change-Registry_Vulue-Ask
 )ELSE IF ERRORLEVEL 1 (
 	GOTO MAIN
 )
@@ -335,20 +431,32 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Value_Path="Input registry entries path: "
-IF "%Reg_Value_Path%" EQU "" (ECHO. && ECHO Plese input registry entries path! && PAUSE && GOTO Add-Registry_Vulue-Ask)
+SET "Reg_Value_Path="
+SET /P Reg_Value_Path="Please enter the path of the registry entries[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Value_Path (
+	ECHO.
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE 
+	GOTO Add-Registry_Vulue-Ask
+)ELSE IF /I "%Reg_Value_Path%" EQU "B" (
+	GOTO Switch_Registry_Value
+)
 ECHO.
 
-CALL :Is_Exist_Registry_Value_Path REM Confirm Path Exist
+CALL :Is_Exist_Registry_Value_Path REM Check the existence of the registry entries
 IF %ERRORLEVEL% NEQ 0 (
-	REM No exist,stop run
+	REM Not exist, enter agein
 	ECHO.
-	ECHO Error path¡Aplease input correct path!
+	ECHO Registry entries path does not exists, please enter again!
+	ECHO.
+	PAUSE
+	GOTO Add-Registry_Vulue-Ask
 )ELSE (
-	REM Exist¡AContinue
+	REM Exist, continue
 	CALL :Add-Registry_Vulue-Name-Ask
 )
-ECHO. && PAUSE && GOTO MAIN
+ECHO. && PAUSE && GOTO Add-Registry_Vulue-Ask
 
 :Add-Registry_Vulue-Name-Ask
 CLS
@@ -356,13 +464,27 @@ ECHO.
 ECHO =======================================================
 ECHO.
 CALL :ALL_Registry_Value
-SET /P Reg_Vulue-Name="Input registry entries name: "
-IF "%Reg_Vulue-Name%" EQU "" (ECHO. && ECHO Plese input registry entries name! && PAUSE && GOTO Add-Registry_Vulue-Name-Ask)
+SET "Reg_Vulue-Name="
+SET /P Reg_Vulue-Name="Please enter the name of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-Name (
+	ECHO.
+	ECHO Please enter the name!
+	ECHO.
+	PAUSE
+	GOTO Add-Registry_Vulue-Name-Ask
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
+	GOTO Add-Registry_Vulue-Ask
+)
+
 CALL :Is_Exist_Registry_Value
 IF %ERRORLEVEL% NEQ 0 (
 	CALL :Add-Registry_Vulue-Type-Ask
 )ELSE (
-	ECHO. && ECHO Current have same name¡Aplease input other name! && ECHO. && PAUSE && GOTO Add-Registry_Vulue-Name-Ask
+	ECHO.
+	ECHO The name already exists, please enter other name!
+	ECHO.
+	PAUSE
+	GOTO Add-Registry_Vulue-Name-Ask
 )
 EXIT /B
 
@@ -370,7 +492,7 @@ EXIT /B
 ECHO.
 ECHO =======================================================
 ECHO.
-CHOICE /C 7654321 /N /M "Please choose entries type[1]String [2]Binary [3]DWord [4]QWord [5]MultiString [6]ExpandString [7]Back: "
+CHOICE /C 7654321 /N /M "Please enter the type of entries [1]String [2]Binary [3]DWord [4]QWord [5]MultiString [6]ExpandString [7]Back: "
 IF ERRORLEVEL 7 (
 	SET Vulue_Type=String
 )ELSE IF ERRORLEVEL 6 (
@@ -393,8 +515,17 @@ EXIT /B
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Vulue-Vulues="Input entries values: "
-IF "%Reg_Vulue-Vulues%" EQU "" (ECHO. && ECHO Plese Input entries values! && PAUSE && GOTO Add-Registry_Vulue-Vulues-Ask)
+SET "Reg_Vulue-Vulues="
+SET /P Reg_Vulue-Vulues="Please enter the value of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-Vulues (
+	ECHO.
+	ECHO Please enter the value!
+	ECHO.
+	PAUSE
+	GOTO Add-Registry_Vulue-Vulues-Ask
+)ELSE IF /I "%Reg_Vulue-Vulues%" EQU "B" (
+	GOTO Add-Registry_Vulue-Type-Ask
+)
 CALL :Add-Registry_Vulue
 EXIT /B
 
@@ -405,9 +536,9 @@ ECHO.
 ECHO Create...
 powershell -command New-ItemProperty -Path Registry::"%Reg_Value_Path%" -Name '"%Reg_Vulue-Name%"' -PropertyType "%Vulue_Type%" -Value '"%Reg_Vulue-Vulues%"'
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Create Fail!
+	ECHO. && ECHO Create failed!
 )ELSE (
-	ECHO. && ECHO Create Success!
+	ECHO. && ECHO Create success!
 )
 EXIT /B
 
@@ -420,20 +551,29 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Value_Path="Input registry entries path: "
-IF "%Reg_Value_Path%" EQU "" (ECHO. && ECHO Plese input entries path! && PAUSE && GOTO Delete-Registry_Vulue-Ask)
+SET "Reg_Value_Path="
+SET /P Reg_Value_Path="Please enter the path of the registry entries[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Value_Path (
+	ECHO.
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE 
+	GOTO Delete-Registry_Vulue-Ask
+)ELSE IF /I "%Reg_Value_Path%" EQU "B" (
+	GOTO Switch_Registry_Value
+)
 ECHO.
 
-CALL :Is_Exist_Registry_Value_Path REM Confirm Path Exist
+CALL :Is_Exist_Registry_Value_Path REM Check the existence of the registry entries
 IF %ERRORLEVEL% NEQ 0 (
-	REM No exist,stop run
+	REM Not exist, enter agein
 	ECHO.
-	ECHO Error path¡APlease input correct path!
+	ECHO Registry entries path does not exists, please enter again!
 )ELSE (
-	REM Exist¡AContinue
+	REM Exist, continue
 	CALL :Del-Registry_Vulue-Name-Ask
 )
-ECHO. && PAUSE && GOTO MAIN
+ECHO. && PAUSE && GOTO Delete-Registry_Vulue-Ask
 
 :Del-Registry_Vulue-Name-Ask
 CLS
@@ -441,15 +581,24 @@ ECHO.
 ECHO =======================================================
 ECHO.
 CALL :ALL_Registry_Value
-SET /P Reg_Vulue-Name="Input entries name([E] Return ): "
-IF "%Reg_Vulue-Name%" EQU "" (
-	ECHO. && ECHO Plese input entries name! && PAUSE && GOTO Del-Registry_Vulue-Name-Ask
-)ELSE IF /I "%Reg_Vulue-Name%" EQU "E" (
+SET "Reg_Vulue-Name="
+SET /P Reg_Vulue-Name="Please enter the name of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-Name (
+	ECHO.
+	ECHO Please enter the name!
+	ECHO.
+	PAUSE
+	GOTO Del-Registry_Vulue-Name-Ask
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
 	GOTO Delete-Registry_Vulue-Ask
 )
 CALL :Is_Exist_Registry_Value
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Error name¡Aplease input other name! && ECHO. && PAUSE && GOTO Del-Registry_Vulue-Name-Ask
+	ECHO.
+	ECHO The name does not exist, please enter other name!
+	ECHO.
+	PAUSE
+	GOTO Del-Registry_Vulue-Name-Ask
 )ELSE (
 	CALL :Del-Registry_Vulue
 )
@@ -462,7 +611,7 @@ ECHO.
 ECHO Delete...
 powershell -command Remove-ItemProperty -Path Registry::"%Reg_Value_Path%" -Name '"%Reg_Vulue-Name%"'
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Delete fail!
+	ECHO. && ECHO Delete failed!
 )ELSE (
 	ECHO. && ECHO Delete success!
 )
@@ -477,20 +626,29 @@ CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Value_Path="Input registry entries path: "
-IF "%Reg_Value_Path%" EQU "" (ECHO. && ECHO Plese input entries path! && PAUSE && GOTO Rename-Registry_Vulue-Ask)
+SET "Reg_Value_Path="
+SET /P Reg_Value_Path="Please enter the path of the registry entries[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Value_Path (
+	ECHO.
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE 
+	GOTO Rename-Registry_Vulue-Ask
+)ELSE IF /I "%Reg_Value_Path%" EQU "B" (
+	GOTO Switch_Registry_Value
+)
 ECHO.
 
-CALL :Is_Exist_Registry_Value_Path REM Confirm Path Exist
+CALL :Is_Exist_Registry_Value_Path REM Check the existence of the registry entries
 IF %ERRORLEVEL% NEQ 0 (
-	REM No exist,stop run
+	REM Not exist, enter agein
 	ECHO.
-	ECHO Error path¡APlease input correct path!
+	ECHO Registry entries path does not exists, please enter again!
 )ELSE (
-	REM Exist¡AContinue
+	REM Exist, continue
 	CALL :Rename-Registry_Vulue-Name-Ask
 )
-ECHO. && PAUSE && GOTO MAIN
+ECHO. && PAUSE && GOTO Rename-Registry_Vulue-Ask
 
 :Rename-Registry_Vulue-Name-Ask
 CLS
@@ -498,35 +656,56 @@ ECHO.
 ECHO =======================================================
 ECHO.
 CALL :ALL_Registry_Value
-SET /P Reg_Vulue-Name="Input entries name([E] Return ): "
-IF "%Reg_Vulue-Name%" EQU "" (
-	ECHO. && ECHO Plese input entries name! && PAUSE && GOTO Rename-Registry_Vulue-Name-Ask
-)ELSE IF /I "%Reg_Vulue-Name%" EQU "E" (
+SET "Reg_Vulue-Name="
+SET /P Reg_Vulue-Name="	Please enter the name of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-Name (
+	ECHO.
+	ECHO Please enter the name!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Vulue-Name-Ask
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
 	GOTO Rename-Registry_Vulue-Ask
 )
 CALL :Is_Exist_Registry_Value
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Error name¡Aplease input other name! && ECHO. && PAUSE && GOTO Rename-Registry_Vulue-Name-Ask
+	ECHO.
+	ECHO The name does not exist, please enter other name!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Vulue-Name-Ask
 )ELSE (
 	CALL :Rename-Registry_Vulue-NewName-Ask
 )
 EXIT /B
 
 :Rename-Registry_Vulue-NewName-Ask
+CLS
 ECHO.
 ECHO =======================================================
 ECHO.
-SET /P Reg_Vulue-NewName="Input entries new name([E] Return ): "
-IF "%Reg_Vulue-NewName%" EQU "" (
-	ECHO. && ECHO Plese input entries new name! && PAUSE && GOTO Rename-Registry_Vulue-NewName-Ask
-)ELSE IF /I "%Reg_Vulue-NewName%" EQU "E" (
+ECHO The chosen name is: "%Reg_Vulue-Name%"
+ECHO.
+SET "Reg_Vulue-NewName="
+SET /P Reg_Vulue-NewName="Please enter the new name of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-NewName (
+	ECHO.
+	ECHO Please enter the new name!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Vulue-NewName-Ask
+)ELSE IF /I "%Reg_Vulue-NewName%" EQU "B" (
 	GOTO Rename-Registry_Vulue-Name-Ask
 )
 CALL :Is_Exist_Registry_New_Entries
 IF %ERRORLEVEL% NEQ 0 (
 	CALL :Rename-Registry_Vulue
 )ELSE (
-	ECHO. && ECHO Current have same name¡Aplease input other name  && ECHO. && PAUSE && GOTO Rename-Registry_Vulue-Name-Ask
+	ECHO.
+	ECHO The new name already exists, please enter other name!
+	ECHO.
+	PAUSE
+	GOTO Rename-Registry_Vulue-Name-Ask
 )
 EXIT /B
 
@@ -538,9 +717,104 @@ ECHO Rename...
 ECHO.
 powershell -command Rename-ItemProperty -Path Registry::"%Reg_Value_Path%" -Name '"%Reg_Vulue-Name%"' -NewName '"%Reg_Vulue-NewName%"' -passthru
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Change fail!
+	ECHO. && ECHO Rename failed!
 )ELSE (
-	ECHO. && ECHO Change Success!
+	ECHO. && ECHO Rename success!
+)
+EXIT /B
+
+
+::REM =======================================Change-Registry_Vulue===================================
+
+
+:Change-Registry_Vulue-Ask
+CLS
+ECHO.
+ECHO =======================================================
+ECHO.
+SET "Reg_Value_Path="
+SET /P Reg_Value_Path="Please enter the path of the registry entries[B/b:Back Menu]: "
+IF NOT DEFINED Reg_Value_Path (
+	ECHO.
+	ECHO Please enter the path!
+	ECHO.
+	PAUSE 
+	GOTO Change-Registry_Vulue-Ask
+)ELSE IF /I "%Reg_Value_Path%" EQU "B" (
+	GOTO Switch_Registry_Value
+)
+ECHO.
+
+CALL :Is_Exist_Registry_Value_Path REM Check the existence of the registry entries
+IF %ERRORLEVEL% NEQ 0 (
+	REM Not exist, enter agein
+	ECHO.
+	ECHO Registry entries path does not exists, please enter again!
+)ELSE (
+	REM Exist, continue
+	CALL :Change-Registry_Vulue-Name-Ask
+)
+ECHO. && PAUSE && GOTO Change-Registry_Vulue-Ask
+
+:Change-Registry_Vulue-Name-Ask
+CLS
+ECHO.
+ECHO =======================================================
+ECHO.
+CALL :ALL_Registry_Value
+SET "Reg_Vulue-Name="
+SET /P Reg_Vulue-Name="Please enter the name of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-Name (
+	ECHO.
+	ECHO Please enter the name!
+	ECHO.
+	PAUSE
+	GOTO Change-Registry_Vulue-Name-Ask
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
+	GOTO Change-Registry_Vulue-Ask
+)
+
+CALL :Is_Exist_Registry_Value
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO.
+	ECHO The name does not exist, please enter other name!
+	ECHO.
+	PAUSE
+	GOTO Change-Registry_Vulue-Name-Ask
+)ELSE (
+	CALL :Change-Registry_Vulue-NewValue-Ask
+)
+EXIT /B
+
+:Change-Registry_Vulue-NewValue-Ask
+ECHO.
+ECHO =======================================================
+ECHO.
+SET "Reg_Vulue-NewValue="
+SET /P Reg_Vulue-NewValue="Please enter the new value of the registry entries[B/b:Back]: "
+IF NOT DEFINED Reg_Vulue-NewValue (
+	ECHO.
+	ECHO Please enter the new value!
+	ECHO.
+	PAUSE
+	GOTO Change-Registry_Vulue-NewValue-Ask
+)ELSE IF /I "%Reg_Vulue-NewValue%" EQU "B" (
+	GOTO Change-Registry_Vulue-Name-Ask
+)
+CALL :Change-Registry_Vulue
+EXIT /B
+
+:Change-Registry_Vulue
+ECHO.
+ECHO =======================================================
+ECHO.
+ECHO Change...
+ECHO.
+powershell -command Set-ItemProperty -Path Registry::"%Reg_Value_Path%" -Name '"%Reg_Vulue-Name%"' -Value '"%Reg_Vulue-NewValue%"' -passthru
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO. && ECHO Change failed!
+)ELSE (
+	ECHO. && ECHO Change success!
 )
 EXIT /B
 
@@ -548,24 +822,24 @@ EXIT /B
 ::REM =======================================Module-Registry_Vulue===================================
 
 
-REM Confirm Path Exist
+REM Check the existence of the registry entries
 :Is_Exist_Registry_Value_Path
 powershell -command Get-item -Path Registry::'%Reg_Value_Path%' > nul 2>&1
 EXIT /B
 
-REM Confirm Entries Exist
+REM Check the existence of the registry entries
 :Is_Exist_Registry_Value
 powershell -command Get-ItemProperty -Path Registry::'%Reg_Value_Path%' -name '"%Reg_Vulue-Name%"' ^| findstr '"%Reg_Vulue-Name%"' > nul 2>&1
 EXIT /B
 
-REM [Rename]Confirm Entries Exist
+REM Check the existence of the new name of the registry keys
 :Is_Exist_Registry_New_Entries
 powershell -command Get-ItemProperty -Path Registry::'%Reg_Value_Path%' -name '"%Reg_Vulue-NewName%"' ^| findstr '"%Reg_Vulue-NewName%"' > nul 2>&1
 EXIT /B
 
 :ALL_Registry_Value
 ECHO.
-ECHO Keys's all entries[If no content,mean no entries]
+ECHO The all registry entries in the keys[if no entries, means no keys!]
 ECHO -----------------------------------------
 powershell -command Get-ItemProperty -Path Registry::'%Reg_Value_Path%'
 ECHO -----------------------------------------
