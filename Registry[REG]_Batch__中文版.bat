@@ -179,6 +179,8 @@ IF %Sum2% EQU 0 (
 EXIT /B
 
 :Delete-Registry_Vulues-Del-Ask
+CLS
+CALL :Show_Registry_Keys_Value
 CHOICE /C NY /N /M "指定機碼下存在項目! 是否轉到刪除作業?[Y/N]: "
 IF ERRORLEVEL 2 (
 	SET Reg_Value_Path="%Reg_Keys%"
@@ -239,7 +241,7 @@ ECHO.
 ECHO =======================================================
 ECHO 刪除機碼中...
 ECHO.
-powershell -command Remove-Item -Path Registry::'%Reg_Keys%'
+powershell -command Remove-Item -Path Registry::'%Reg_Keys%' -Recurse
 IF %ERRORLEVEL% NEQ 0 (ECHO. && ECHO 刪除失敗!)ELSE (ECHO. && ECHO 刪除成功!)
 EXIT /B
 
@@ -324,6 +326,12 @@ EXIT /B
 REM 確認機碼內是否存在項目值
 :Is_Exist_Registry_Keys_Value
 for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_Keys%" /s).length"') do SET Sum2=%%k > nul 2>&1
+
+EXIT /B
+
+REM 顯示機碼內項目值
+:Show_Registry_Keys_Value
+ECHO.
 IF %Sum2% NEQ 0 (
 	ECHO --------------------------------------------------
 	ECHO 機碼內有項目值!
