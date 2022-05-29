@@ -152,7 +152,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 CALL :Is_Exist_Registry_SubKeys
-IF %Sum% == 0 (
+IF %Sum% EQU 0 (
 	REM No subkeys, delete it
 	ECHO.
 	ECHO Checked no subkeys in the registry keys!
@@ -160,12 +160,13 @@ IF %Sum% == 0 (
 )ELSE (
 	REM Exist subkeys, ask to delete it
 	CALL :Delete-Registry_SubKeys-Del-Ask
+	GOTO Delete-Registry_Keys-Del-Ask
 )
 
 ECHO.
 CALL :Is_Exist_Registry_Keys_Value
 IF %Sum2% EQU 0 (
-	REM No Entries, delete it
+	REM Not Entries, delete it
 	ECHO.
 	ECHO Checked no registry entries in the registry keys, 3 seconds later will delete it!
 	ECHO.
@@ -175,11 +176,18 @@ IF %Sum2% EQU 0 (
 	REM Exist Entries, ask to delete it
 	ECHO.
 	CALL :Delete-Registry_Vulues-Del-Ask
+	GOTO Delete-Registry_Keys-Del-Ask
 )
+ECHO.
+pause
+GOTO Delete-Registry_Keys-Ask
 EXIT /B
 
 :Delete-Registry_Vulues-Del-Ask
 CLS
+ECHO.
+ECHO Original choose Reg keys: %Reg_Keys%
+ECHO.
 CALL :Show_Registry_Keys_Value
 CHOICE /C NY /N /M "Registry Entries already exist, do you want to delete?[Y/N]: "
 IF ERRORLEVEL 2 (
@@ -193,10 +201,15 @@ IF ERRORLEVEL 2 (
 	TIMEOUT /T 3 /NOBREAK > nul 2>&1
 	CALL :Delete-Registry_Keys_And_SubKeys-Del
 )
+ECHO.
+pause
 EXIT /B
 
 :Delete-Registry_SubKeys-Del-Ask
 CLS
+ECHO.
+ECHO Original choose Reg keys: %Reg_Keys%
+ECHO.
 CALL :ALL_Registry_SubKeys
 CHOICE /C 4321 /N /M "The keys has subkeys! [1]Delete one subkey [2]Delete all subkeys [3]Delete all subkeys and Keys [4]canceled: "
 IF ERRORLEVEL 4 (
@@ -217,7 +230,7 @@ ECHO.
 ECHO =======================================================
 CALL :ALL_Registry_SubKeys
 SET "Reg_SubKeys="
-SET /P Reg_SubKeys="Please enter the name of the subkeys you want to delete[B/b:Back Menu]: "
+SET /P Reg_SubKeys="Please enter the path of the subkeys you want to delete[B/b:Back Menu]: "
 IF NOT DEFINED Reg_SubKeys (
 	ECHO.
 	ECHO Please enter the name of the subkeys!
@@ -225,9 +238,45 @@ IF NOT DEFINED Reg_SubKeys (
 	PAUSE
 	GOTO Delete-Registry_Some_SubKeys-Del
 )ELSE IF /I "%Reg_SubKeys%" EQU "B" (
-	GOTO Switch_Registry_Keys
+	GOTO Delete-Registry_SubKeys-Del-Ask
 )
 ECHO.
+CALL :Is_Exist_Registry_Keys-B REM Check the existence of the registry subkeys
+IF %ERRORLEVEL% NEQ 0 (
+	REM Not exist, no need to delete!
+	ECHO.
+	ECHO Subkeys does not exists in keys, please enter again!
+	ECHO.
+	PAUSE
+	GOTO Delete-Registry_Some_SubKeys-Del
+)
+ECHO.
+CALL :Is_Exist_Registry_SubKeys-B REM Checked registry subkeys has other subkeys
+IF %Sum% EQU 0 (
+	REM Not exist subkeys,delete!
+	ECHO.
+	ECHO Checked no other subkeys in the subkeys!
+	ECHO.
+)ELSE (
+	REM Exist subkeys, ask to delete it
+	GOTO Delete-Registry_SubKeys-Del-Ask
+)
+ECHO.
+CALL :Is_Exist_Registry_Keys_Value-B REM Checked registry subkeys has other entries
+IF %Sum2% EQU 0 (
+	REM Not exist entries,delete!
+	ECHO.
+	ECHO Checked no registry entries in the registry keys, 3 seconds later will delete it!
+	ECHO.
+	TIMEOUT /T 3 /NOBREAK > nul 2>&1
+)ELSE (
+	REM Exist Entries, ask to delete it
+	ECHO.
+	CALL :Delete-Registry_Vulues-Del-Ask-B
+	ECHO.
+	PAUSE
+	GOTO Delete-Registry_Keys-Del-Ask
+)
 powershell -command Remove-Item -Path Registry::'%Reg_SubKeys%'
 IF %ERRORLEVEL% NEQ 0 (
 	ECHO.
@@ -235,6 +284,26 @@ IF %ERRORLEVEL% NEQ 0 (
 )ELSE (
 	ECHO.
 	ECHO Delete Registry SubKeys Success!
+)
+ECHO.
+EXIT /B
+
+:Delete-Registry_Vulues-Del-Ask-B
+CLS
+CALL :Show_Registry_Keys_Value-B
+CHOICE /C NY /N /M "Registry Entries exist in the subkeys, do you want to delete?[Y/N]: "
+IF ERRORLEVEL 2 (
+	SET Reg_Value_Path="%Reg_SubKeys%"
+	CALL :Del-Registry_Vulue-Name-Ask
+	ECHO.
+	PAUSE
+	GOTO Delete-Registry_Keys-Del-Ask
+)ELSE IF ERRORLEVEL 1 (
+	ECHO.
+	ECHO Successfully canceled,3 seconds later will delete it!
+	ECHO.
+	TIMEOUT /T 3 /NOBREAK > nul 2>&1
+	CALL :Delete-Registry_Keys_And_SubKeys-Del-B
 )
 EXIT /B
 
@@ -262,6 +331,22 @@ ECHO =======================================================
 ECHO Delete the keys...
 ECHO.
 powershell -command Remove-Item -Path Registry::'%Reg_Keys%' -Recurse
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO.
+	ECHO Delete Fail!
+)ELSE (
+	ECHO.
+	ECHO Delete Success!
+)
+EXIT /B
+
+:Delete-Registry_Keys_And_SubKeys-Del-B
+CLS
+ECHO.
+ECHO =======================================================
+ECHO Delete the subkeys...
+ECHO.
+powershell -command Remove-Item -Path Registry::'%Reg_SubKeys%' -Recurse
 IF %ERRORLEVEL% NEQ 0 (
 	ECHO.
 	ECHO Delete Fail!
@@ -356,14 +441,51 @@ REM Check the existence of the registry keys
 powershell -command Get-item -Path Registry::'%Reg_Keys%' > nul 2>&1
 EXIT /B
 
+REM Check the existence of the registry keys(Use for subkeys)
+:Is_Exist_Registry_Keys-B
+powershell -command Get-item -Path Registry::'%Reg_SubKeys%' > nul 2>&1
+EXIT /B
+
 REM Check the existence of the subkeys of the registry keys
 :Is_Exist_Registry_SubKeys
 for /F "delims=" %%i IN ('"powershell -command (Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse).length"') do SET Sum=%%i > nul 2>&1
 EXIT /B
 
+REM Check the existence of the subkeys of the registry keys(Use for subkeys)
+:Is_Exist_Registry_SubKeys-B
+for /F "delims=" %%i IN ('"powershell -command (Get-ChildItem -Path Registry::'%Reg_SubKeys%' -Recurse).length"') do SET Sum=%%i > nul 2>&1
+EXIT /B
+
 REM Check the existence of the registry entries in the registry keys and subkeys
 :Is_Exist_Registry_Keys_Value
 for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_Keys%" /s).length"') do SET Sum2=%%k > nul 2>&1
+EXIT /B
+
+REM Check the existence of the registry entries in the registry keys and subkeys(Use for subkeys)
+:Is_Exist_Registry_Keys_Value-B
+for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_SubKeys%" /s).length"') do SET Sum2=%%k > nul 2>&1
+EXIT /B
+
+REM Check the existence of the new name of the registry keys
+:Is_Exist_Registry_Other_Keys
+REM Get path without keys name
+for /F %%a in ("%Reg_Keys%") do SET path1=%%~dpa > nul 2>&1
+REM Remove other not reg path
+for /F "tokens=* delims=%cd%" %%b in ("%path1%") do SET Reg_keys_Path=H%%b > nul 2>&1
+REM Remove spaces
+SET "Reg_keys_Path=%Reg_keys_Path:  =%"
+powershell -command Get-item -Path Registry::'%Reg_keys_Path%%Reg_keys-NewName%' > nul 2>&1
+EXIT /B
+
+REM Show all subkeyss
+:ALL_Registry_SubKeys
+ECHO.
+ECHO The all subkeys of the registry keys:
+ECHO -----------------------------------------
+powershell -command Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse ^| Select-Object Name
+ECHO Total: %Sum%
+ECHO -----------------------------------------
+ECHO.
 EXIT /B
 
 REM Show Registry Entries
@@ -378,21 +500,16 @@ IF %Sum2% NEQ 0 (
 )
 EXIT /B
 
-REM Check the existence of the new name of the registry keys
-:Is_Exist_Registry_Other_Keys
-SET "Reg_keys_Path=%Reg_Keys:~,-1%"
-powershell -command Get-item -Path Registry::'%Reg_keys_Path%%Reg_keys-NewName%' > nul 2>&1
-EXIT /B
-
-REM Show all subkeyss
-:ALL_Registry_SubKeys
+REM Show Registry Entries(Use for subkeys)
+:Show_Registry_Keys_Value-B
 ECHO.
-ECHO The all subkeys of the registry keys:
-ECHO -----------------------------------------
-powershell -command Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse ^| Select-Object Name
-ECHO Total: %Sum%
-ECHO -----------------------------------------
-ECHO.
+IF %Sum2% NEQ 0 (
+	ECHO --------------------------------------------------
+	ECHO The registry keys or subkeys has the registry entries:
+	ECHO.
+	powershell -command Get-ItemProperty -Path Registry::'%Reg_SubKeys%'
+	ECHO --------------------------------------------------
+)
 EXIT /B
 
 REM Show choose keys
