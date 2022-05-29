@@ -1,60 +1,65 @@
-# Add,Del,Rename Registry[REG]
+# Add,Delete,Rename,Setting Registry[REG]
 
-## 介紹: 新增、刪除、重命名機碼或機碼項目
+## Introduction: Batch scripts for Create, Delete, Rename Setting Registry Keys or Entries.
 
 
-- ## 機碼 [[參考]](https://docs.microsoft.com/zh-tw/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
+- ## Registry Keys [[Reference]](https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
 
-**新增機碼:**
+**Creating Keys:**
 ```
-New-Item -Path Registry::'Reg_Keys'(如要覆蓋已存在的機碼則在後面加入-Force指令)
-```
-
-**刪除機碼:**
-```
-1. Remove-Item -Path Registry::'Reg_Keys'(強制刪除加入-Recurse指令)
-2. Remove-Item -Path Registry::'Reg_Keys\*'(加入"\*"刪除機碼下所有子機碼)
+New-Item -Path Registry::'Reg keys path'(If you want to overwrite a pre-existing use -Force)
 ```
 
-**重新命名機碼:**
+**Removing Keys:**
 ```
-Rename-Item -Path Registry::"Reg_Keys" -NewName '新名稱' (若要顯示重新命名後的值加入-passthru指令)
+1. Remove-Item -Path Registry::'Reg keys path'(Force delete use -Recurse)
+2. Remove-Item -Path Registry::'Reg keys path\*'(Add"\*"delete all subkeys)
 ```
 
-**確認機碼是否存在:**
-> Get-item -Path Registry::'Reg_Keys'(取得路徑，如不存在則返回錯誤)
+**Rename Keys:**
+```
+Rename-Item -Path Registry::"Reg keys path" -NewName 'New name' (Display the renamed value use -passthru)
+```
 
-**確認機碼下是否有其他子機碼存在:**
-> Get-ChildItem -Path Registry::'Reg_Keys'(若要顯示所有包含的子機碼加入-Recurse指令，注意此指令不適用於Get-item)
+**Check the existence of the keys:**
+> Get-item -Path Registry::'Reg keys path'(Get keys path)
 
-**篩選:**
-> Get-item -Path Registry | Select-Object Name (若只要顯示路徑名稱使用Select-Object)
+**Check the existence of the subkeys:**
+> Get-ChildItem -Path Registry::'Reg keys path'(Show contained items use -Recurse)
 
+**Only display path:**
+> Get-item -Path Registry::'Reg keys path' | Select-Object Name
+>> Get-ChildItem -Path Registry::'Reg keys path' | Select-Object Name
 
 </br>___________________________________________________________________________________________________________________________
 </br>
 
 
-- ## 機碼項目 [[參考]](https://docs.microsoft.com/zh-tw/powershell/scripting/samples/working-with-registry-entries?view=powershell-7.2)
+- ## Registry Entries [[Reference]](https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-entries?view=powershell-7.2)
 
 
-**新增項目:**
+**Creating New Entries:**
 ```
-New-ItemProperty -Path Registry::"Reg_Value_Path" -Name 'Reg_Vulue_Name' -PropertyType "Vulue_Type" -Value 'Reg_Vulue_Vulues'(如要覆蓋已存在的項目則在後面加入-Force指令)
-```
-
-**刪除項目:**
-```
-Remove-ItemProperty -Path Registry::"Reg_Value_Path" -Name 'Reg_Vulue_Name'
+New-ItemProperty -Path Registry::"Reg Entries Path" -Name 'Reg Entries Name' -PropertyType "Vulue Type" -Value 'Vulues'(If you want to overwrite a pre-existing use -Force)
 ```
 
-**重新命名項目:**
+**Deleting Entries:**
 ```
-Rename-ItemProperty -Path Registry::"Reg_Value_Path" -Name 'Reg_Vulue_Name' -NewName '新名稱'(若要顯示重新命名後的值加入-passthru指令)
+Remove-ItemProperty -Path Registry::"Reg Entries Path" -Name 'Reg Entries Name'
 ```
 
-**確認項目是否存在:**
-> Get-ItemProperty -Path Registry::'Reg_Value_Path' -name 'Reg_Vulue_Name'
+**Renaming Entries:**
+```
+Rename-ItemProperty -Path Registry::"Reg Entries Path" -Name 'Reg Entries Name' -NewName 'New name'(Display the renamed value use -passthru)
+```
 
-**篩選:**
-> Get-ItemProperty -Path Registry::'Reg_Value_Path' -name 'Reg_Vulue_Name' | findstr 'Reg_Vulue_Name' (若只要顯示項目名稱使用findstr)
+**Setting Entries Values:**
+```
+Set-ItemProperty -Path Registry::"Reg Entries Path" -Name 'Reg Entries Name' -Value 'New Values'(Display the renamed value use -passthru)
+```
+
+**Check the existence of the entries:**
+> Get-ItemProperty -Path Registry::'Reg Entries Path' -name 'Reg Entries Name'
+
+**Displays specifying item:**
+> Get-ItemProperty -Path Registry::'Reg Entries Path' -name 'Reg Entries Name' | findstr 'Reg Entries Name'
