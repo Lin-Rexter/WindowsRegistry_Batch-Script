@@ -179,6 +179,8 @@ IF %Sum2% EQU 0 (
 EXIT /B
 
 :Delete-Registry_Vulues-Del-Ask
+CLS
+CALL :Show_Registry_Keys_Value
 CHOICE /C NY /N /M "Registry Entries already exist, do you want to delete?[Y/N]: "
 IF ERRORLEVEL 2 (
 	SET Reg_Value_Path="%Reg_Keys%"
@@ -259,7 +261,7 @@ ECHO.
 ECHO =======================================================
 ECHO Delete the keys...
 ECHO.
-powershell -command Remove-Item -Path Registry::'%Reg_Keys%'
+powershell -command Remove-Item -Path Registry::'%Reg_Keys%' -Recurse
 IF %ERRORLEVEL% NEQ 0 (
 	ECHO.
 	ECHO Delete Fail!
@@ -362,6 +364,11 @@ EXIT /B
 REM Check the existence of the registry entries in the registry keys and subkeys
 :Is_Exist_Registry_Keys_Value
 for /F "delims=" %%k IN ('"powershell -command (reg query "%Reg_Keys%" /s).length"') do SET Sum2=%%k > nul 2>&1
+EXIT /B
+
+REM Show Registry Entries
+:Show_Registry_Keys_Value
+ECHO.
 IF %Sum2% NEQ 0 (
 	ECHO --------------------------------------------------
 	ECHO The registry keys or subkeys has the registry entries:
