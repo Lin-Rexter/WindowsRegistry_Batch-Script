@@ -126,7 +126,7 @@ SET "Reg_Keys="
 SET /P Reg_Keys="Please enter the path of the registry keys[B/b:Back Menu]: "
 IF NOT DEFINED Reg_Keys (
 	ECHO. 
-	ECHO Please enter the path!
+	ECHO Please enter te path!
 	ECHO.
 	PAUSE
 	GOTO Delete-Registry_Keys-Ask
