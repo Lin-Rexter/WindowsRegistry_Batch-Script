@@ -1,7 +1,6 @@
-# Add,Delete,Rename,Setting Registry[REG]
+# WindowsRegistry_Batch-Script
 
-## Introduction: Batch scripts for Create, Delete, Rename Setting Registry Keys or Entries.
-
+Introduction: Add, Delete, Rename, Edit to the windows registry using batch script.
 
 - ## Registry Keys [[Reference]](https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
 
