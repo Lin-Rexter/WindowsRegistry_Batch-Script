@@ -13,8 +13,8 @@ ECHO                       Choose the function
 ECHO ==============================================================
 ECHO.
 ECHO --------------------------------------------------------------
-ECHO [1] Management Registry Keys
-ECHO [2] Management Registry Entries
+ECHO [1] Edit Registry Keys
+ECHO [2] Edit Registry Entries
 ECHO --------------------------------------------------------------
 ECHO.
 CHOICE /C 21 /N /M "Choose the function[1~2]:"
@@ -84,7 +84,7 @@ ECHO Create...
 ECHO.
 powershell -command New-Item -Path Registry::'%Reg_Keys%'
 IF %ERRORLEVEL% NEQ 0 (
-	ECHO. && ECHO Create Registry Keys Fail! 
+	ECHO. && ECHO Create Registry Keys Fail, Please enter correct path!
 )ELSE (
 	ECHO. && ECHO Create Registry Keys Success!
 )
