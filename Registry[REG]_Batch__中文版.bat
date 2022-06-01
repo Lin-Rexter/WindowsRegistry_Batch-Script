@@ -68,7 +68,7 @@ IF NOT DEFINED Reg_Keys (
 )
 ECHO.
 
-CALL :Is_Exist_Registry_Keys REM 確認路徑是否存在
+CALL :Is_Exist_Registry_Keys %Reg_Keys% REM 確認路徑是否存在
 IF %ERRORLEVEL% NEQ 0 (
 	REM 不存在，建立!
 	CALL :Add-Registry_Keys-Add
@@ -134,10 +134,12 @@ IF NOT DEFINED Reg_Keys (
 )
 ECHO.
 
-CALL :Is_Exist_Registry_Keys REM 確認路徑是否存在
+CALL :Is_Exist_Registry_Keys %Reg_Keys% REM 確認路徑是否存在
 IF %ERRORLEVEL% NEQ 0 (
 	ECHO.
 	ECHO 路徑不存在，請重新輸入!
+	CALL :Space
+	GOTO Delete-Registry_Keys-Ask
 )ELSE (
 	GOTO Delete-Registry_Keys-Check-Subkeys
 )
@@ -157,10 +159,8 @@ IF %Sum% EQU 0 (
 )ELSE (
 	REM 存在子機碼，確認是否刪除!
 	CALL :Delete-Registry_Keys-Delete-SubKeys-Ask
-	GOTO Delete-Registry_Keys-Check-Subkeys
 )
-ECHO.
-CALL :Delete-Registry_Keys-Check-Entries
+GOTO Delete-Registry_Keys-Check-Entries
 
 
 :Delete-Registry_Keys-Check-Entries
@@ -175,8 +175,7 @@ IF %Sum2% EQU 0 (
 )ELSE (
 	REM 存在項目，確認是否刪除!
 	ECHO.
-	CALL :Delete-Registry_Keys-Delete-Entries-Ask
-	GOTO Delete-Registry_Keys-Check-Entries
+	GOTO Delete-Registry_Keys-Delete-Entries-Ask
 )
 CALL :Space
 GOTO Delete-Registry_Keys-Ask
@@ -191,26 +190,19 @@ CALL :ALL_Registry_SubKeys
 CHOICE /C 4321 /N /M "指定機碼下存在其他子機碼! [1]改變心意，只刪除指定子機碼 [2]改變心意，只刪除所有子機碼[不包括指定機碼] [3]不理會子機碼，全部刪除 [4]不刪除，保留子機碼: "
 IF ERRORLEVEL 4 (
 	GOTO Delete-Registry_Some_SubKeys
-	ECHO A
-	CALL :Space
 )ELSE IF ERRORLEVEL 3 (
 	CALL :Delete-Registry_All_SubKeys
-	CALL :Space
-	GOTO Delete-Registry_Keys-Ask
 )ELSE IF ERRORLEVEL 2 (
 	ECHO.
 	ECHO 已忽略子機碼，將全數刪除! 3秒後進行刪除!
 	CALL :Wait 3
 	CALL :Delete-Registry_Keys_And_SubKeys
-	CALL :Space
-	GOTO Delete-Registry_Keys-Ask
 )ELSE IF ERRORLEVEL 1 (
 	ECHO.
 	ECHO 已保留子機碼，因此認定不刪除原指定機碼!
-	CALL :Space
-	GOTO Delete-Registry_Keys-Ask
 )
-EXIT /B
+CALL :Space
+GOTO Delete-Registry_Keys-Ask
 
 
 :Delete-Registry_Keys-Delete-Entries-Ask
@@ -223,17 +215,14 @@ CHOICE /C NY /N /M "指定機碼下存在項目! 是否保留?[Y/N]: "
 IF ERRORLEVEL 2 (
 	ECHO.
 	ECHO 已確認保留，因此認定不刪除原指定機碼!
-	CALL :Space
-	GOTO Delete-Registry_Keys-Ask
 )ELSE IF ERRORLEVEL 1 (
 	ECHO.
 	ECHO 確認不保留項目! 3秒後進行刪除!
 	CALL :Wait 3
 	CALL :Delete-Registry_Keys_And_SubKeys
-	CALL :Space
-	GOTO Delete-Registry_Keys-Ask
 )
-EXIT /B
+CALL :Space
+GOTO Delete-Registry_Keys-Ask
 
 
 :Delete-Registry_Some_SubKeys
@@ -242,7 +231,6 @@ ECHO.
 ECHO =======================================================
 CALL :ALL_Registry_SubKeys
 SET "Reg_SubKeys="
-ECHO %Reg_SubKeys%
 SET /P Reg_SubKeys="請輸入要刪除的子機碼路徑[B/b:Back Menu]: "
 IF NOT DEFINED Reg_SubKeys (
 	ECHO.
@@ -252,27 +240,44 @@ IF NOT DEFINED Reg_SubKeys (
 )ELSE IF /I "%Reg_SubKeys%" EQU "B" (
 	GOTO Delete-Registry_Keys-Delete-SubKeys-Ask
 )
-
 ECHO.
-SET "Reg_Keys=%Reg_SubKeys%"
-CALL :Is_Exist_Registry_Keys REM 確認輸入的子機碼路徑是否正確
+
+CALL :Is_Exist_Registry_Keys %Reg_SubKeys% REM 確認輸入的子機碼路徑是否正確
 IF %ERRORLEVEL% NEQ 0 (
 	REM 不存在，不需刪除!
 	ECHO.
 	ECHO 機碼下無此子機碼，請重新輸入!
 	CALL :Space
 	GOTO Delete-Registry_Some_SubKeys
+)ELSE (
+	SET "Reg_Keys=%Reg_SubKeys%"
+	GOTO Delete-Registry_Keys-Check-Subkeys
 )
-GOTO Delete-Registry_Keys-Check-Subkeys
 
 
 :Delete-Registry_All_SubKeys
 CLS
 ECHO.
 ECHO =======================================================
-CALL :ALL_Registry_SubKeys
-ECHO 刪除所有子機碼中...
+CALL :Is_Exist_Registry_Keys_Value
+IF %Sum2% NEQ 0 (
+	REM 不存在項目，可刪除!
+	ECHO.
+	CALL :Show_Registry_Keys_Entries
+	CHOICE /C NY /N /M "子機碼下存在項目! 是否保留?[Y/N]: "
+	IF ERRORLEVEL 2 (
+		ECHO.
+		ECHO 已確認保留，暫停刪除子機碼!
+		CALL :Space
+		GOTO Delete-Registry_Keys-Ask
+	)ELSE IF ERRORLEVEL 1 (
+		ECHO.
+		ECHO 確認不保留項目!
+	)
+)
 ECHO.
+ECHO 3秒後進行刪除!
+CALL :Wait 3
 powershell -command Remove-Item -Path Registry::'%Reg_Keys%\*' -Recurse
 IF %ERRORLEVEL% NEQ 0 (
 	ECHO. && ECHO 刪除失敗!
@@ -318,7 +323,7 @@ IF NOT DEFINED Reg_Keys (
 )
 ECHO.
 
-CALL :Is_Exist_Registry_Keys REM 確認機碼路徑是否存在
+CALL :Is_Exist_Registry_Keys %Reg_Keys% REM 確認機碼路徑是否存在
 IF %ERRORLEVEL% NEQ 0 (
 	REM 不存在，停止操作!
 	ECHO.
@@ -374,7 +379,7 @@ EXIT /B
 
 REM 確認路徑是否存在
 :Is_Exist_Registry_Keys
-powershell -command Get-item -Path Registry::'%Reg_Keys%' > nul 2>&1
+powershell -command Get-item -Path Registry::'%~1' > nul 2>&1
 EXIT /B
 
 REM 確認子機碼是否存在
@@ -404,7 +409,11 @@ ECHO.
 ECHO 指定機碼下的所有子機碼
 ECHO -----------------------------------------
 powershell -command Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse ^| Select-Object Name
-ECHO 子機碼數量:%Sum%
+IF %ERRORLEVEL% NEQ 0 (
+	ECHO 無子機碼存在
+)ElSE (
+	ECHO 子機碼數量:%Sum%
+)
 ECHO -----------------------------------------
 ECHO.
 EXIT /B
@@ -416,7 +425,7 @@ IF %Sum2% NEQ 0 (
 	ECHO --------------------------------------------------
 	ECHO 機碼內有項目值!
 	ECHO.
-	powershell -command Get-ItemProperty -Path Registry::'%Reg_Keys%'
+	powershell -command Get-ItemProperty -Path Registry::'%Reg_Keys%\*'
 	ECHO --------------------------------------------------
 )
 EXIT /B
