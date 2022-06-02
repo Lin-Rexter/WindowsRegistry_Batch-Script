@@ -1,6 +1,8 @@
 # WindowsRegistry_Batch-Script
 
 Introduction: Add, Delete, Rename, Edit to the windows registry using batch script.
+__________________________________________________________________________________________________________________________
+</br>
 
 - ## Registry Keys [[Reference]](https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
 
@@ -62,3 +64,9 @@ Set-ItemProperty -Path Registry::"Reg Entries Path" -Name 'Reg Entries Name' -Va
 
 **Displays specifying item:**
 > Get-ItemProperty -Path Registry::'Reg Entries Path' -name 'Reg Entries Name' | findstr 'Reg Entries Name'
+
+</br>___________________________________________________________________________________________________________________________
+</br>
+
+
+**Translation quality is not the best, I apologize for the inconvenience cause and appreciate your understanding.**
