@@ -263,6 +263,7 @@ CALL :Is_Exist_Registry_Keys_Value
 IF %Sum2% NEQ 0 (
 	REM 不存在項目，可刪除!
 	ECHO.
+	ECHO 指定機碼: %Reg_Keys%
 	CALL :Show_Registry_Keys_Entries
 	CHOICE /C NY /N /M "子機碼下存在項目! 是否保留?[Y/N]: "
 	IF ERRORLEVEL 2 (
@@ -425,7 +426,8 @@ IF %Sum2% NEQ 0 (
 	ECHO --------------------------------------------------
 	ECHO 機碼內有項目值!
 	ECHO.
-	powershell -command Get-ItemProperty -Path Registry::'%Reg_Keys%\*'
+	powershell -command Get-Item -Path Registry::'%Reg_Keys%' ^|  Select-Object Name,Property
+	powershell -command Get-ChildItem -Path Registry::'%Reg_Keys%' -Recurse ^|  Select-Object Name,Property
 	ECHO --------------------------------------------------
 )
 EXIT /B
