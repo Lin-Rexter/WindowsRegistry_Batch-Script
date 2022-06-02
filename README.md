@@ -1,6 +1,8 @@
 # WindowsRegistry_Batch-Script
 
-Introduction: Add, Delete, Rename, Edit to the windows registry using batch script.
+Introduction: Add, Delete, Rename, Edit to the windows registry keys entries(values) using batch script.
+</br>
+介紹: 新增，刪除，重命名，編輯機碼或登錄項目(值)
 
 </br>___________________________________________________________________________________________________________________________
 
