@@ -2,7 +2,8 @@
 
 Introduction: Add, Delete, Rename, Edit to the windows registry using batch script.
 
-</br>_________________________________________________________________________________________________________________
+</br>_______________________________________________________________________________________________________________________________________
+
 
 - ## Registry Keys [[Reference]](https://docs.microsoft.com/en-us/powershell/scripting/samples/working-with-registry-keys?view=powershell-7.2)
 
@@ -32,7 +33,7 @@ Rename-Item -Path Registry::"Reg keys path" -NewName 'New name' (Display the ren
 > Get-item -Path Registry::'Reg keys path' | Select-Object Name
 >> Get-ChildItem -Path Registry::'Reg keys path' | Select-Object Name
 
-</br>___________________________________________________________________________________________________________________________
+</br>_______________________________________________________________________________________________________________________________________
 </br>
 
 
