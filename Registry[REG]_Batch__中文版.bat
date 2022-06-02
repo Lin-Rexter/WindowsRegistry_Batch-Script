@@ -56,7 +56,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Keys="
-SET /P Reg_Keys="請輸入要新增的機碼路徑[B/b:Back Menu]: "
+SET /P Reg_Keys="請輸入要新增的機碼路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Keys (
 	ECHO.
 	ECHO 請輸入機碼路徑!
@@ -123,7 +123,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Keys="
-SET /P Reg_Keys="請輸入要刪除的機碼路徑[B/b:Back Menu]: "
+SET /P Reg_Keys="請輸入要刪除的機碼路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Keys (
 	ECHO. 
 	ECHO 請輸入機碼路徑!
@@ -187,7 +187,7 @@ ECHO.
 ECHO 指定機碼: %Reg_Keys%
 ECHO.
 CALL :ALL_Registry_SubKeys
-CHOICE /C 4321 /N /M "指定機碼下存在其他子機碼! [1]改變心意，只刪除指定子機碼 [2]改變心意，只刪除所有子機碼[不包括指定機碼] [3]不理會子機碼，全部刪除 [4]不刪除，保留子機碼: "
+CHOICE /C 4321 /N /M "指定機碼下存在其他子機碼! [1]改變心意，只刪除指定子機碼 [2]改變心意，只刪除所有子機碼[不包括指定機碼] [3]不理會子機碼，全部強制刪除 [4]不刪除，保留子機碼: "
 IF ERRORLEVEL 4 (
 	GOTO Delete-Registry_Some_SubKeys
 )ELSE IF ERRORLEVEL 3 (
@@ -231,7 +231,7 @@ ECHO.
 ECHO =======================================================
 CALL :ALL_Registry_SubKeys
 SET "Reg_SubKeys="
-SET /P Reg_SubKeys="請輸入要刪除的子機碼路徑[B/b:Back Menu]: "
+SET /P Reg_SubKeys="請輸入要刪除的子機碼路徑[B/b:返回選單]: "
 IF NOT DEFINED Reg_SubKeys (
 	ECHO.
 	ECHO 請輸入子機碼名稱!
@@ -312,7 +312,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Keys="
-SET /P Reg_Keys="請輸入要重新命名的機碼路徑[B/b:Back Menu]: "
+SET /P Reg_Keys="請輸入要重新命名的機碼路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Keys (
 	ECHO. 
 	ECHO 請輸入機碼路徑!
@@ -342,10 +342,10 @@ ECHO =======================================================
 ECHO.
 CALL :Registry_Keys
 SET "Reg_keys-NewName="
-SET /P Reg_keys-NewName="請輸入更改後的機碼新名稱[輸入E 返回]: "
+SET /P Reg_keys-NewName="請輸入更改後的機碼新名稱[B/b:返回]: "
 IF NOT DEFINED Reg_keys-NewName (
 	ECHO. && ECHO 請輸入機碼新名稱! && ECHO. && PAUSE && GOTO Rename-Registry_Keys-NewName-Ask
-)ELSE IF /I "%Reg_keys-NewName%" EQU "E" (
+)ELSE IF /I "%Reg_keys-NewName%" EQU "B" (
 	GOTO Rename-Registry_Keys-Ask
 )
 CALL :Is_Exist_Registry_Other_Keys
@@ -485,7 +485,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Value_Path="
-SET /P Reg_Value_Path="請輸入要新增的機碼項目路徑[B/b:Back Menu]: "
+SET /P Reg_Value_Path="請輸入要新增的機碼項目路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Value_Path (
 	ECHO.
 	ECHO 請輸入機碼項目路徑!
@@ -586,7 +586,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Value_Path="
-SET /P Reg_Value_Path="請輸入要刪除的機碼項目路徑[B/b:Back Menu]: "
+SET /P Reg_Value_Path="請輸入要刪除的機碼項目路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Value_Path (
 	ECHO.
 	ECHO 請輸入機碼項目路徑!
@@ -616,7 +616,7 @@ ECHO =======================================================
 ECHO.
 CALL :ALL_Registry_Value
 SET "Reg_Vulue-Name="
-SET /P Reg_Vulue-Name="請輸入要刪除的機碼項目名稱[輸入B 返回]: "
+SET /P Reg_Vulue-Name="請輸入要刪除的機碼項目名稱[B/b:返回]: "
 IF NOT DEFINED Reg_Vulue-Name (
 	ECHO. && ECHO 請輸入機碼項目名稱! && ECHO. && PAUSE && GOTO Del-Registry_Vulue-Name-Ask
 )ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
@@ -649,7 +649,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Value_Path="
-SET /P Reg_Value_Path="請輸入要重新命名的機碼項目路徑[B/b:Back Menu]: "
+SET /P Reg_Value_Path="請輸入要重新命名的機碼項目路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Value_Path (
 	ECHO.
 	ECHO 請輸入機碼項目路徑!
@@ -679,10 +679,10 @@ ECHO =======================================================
 ECHO.
 CALL :ALL_Registry_Value
 SET "Reg_Vulue-Name="
-SET /P Reg_Vulue-Name="請輸入要重新命名的機碼項目名稱[輸入E 返回]: "
+SET /P Reg_Vulue-Name="請輸入要重新命名的機碼項目名稱[B/b:返回]: "
 IF NOT DEFINED Reg_Vulue-Name (
 	ECHO. && ECHO 請輸入新機碼項目名稱! && ECHO. && PAUSE && GOTO Rename-Registry_Vulue-Name-Ask
-)ELSE IF /I "%Reg_Vulue-Name%" EQU "E" (
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
 	GOTO Rename-Registry_Vulue-Ask
 )
 CALL :Is_Exist_Registry_Value
@@ -697,10 +697,10 @@ ECHO.
 ECHO 選擇的機碼項目: "%Reg_Vulue-Name%"
 ECHO.
 SET "Reg_Vulue-NewName="
-SET /P Reg_Vulue-NewName="請輸入新的的機碼項目名稱[輸入E 返回]: "
+SET /P Reg_Vulue-NewName="請輸入新的的機碼項目名稱[B/b:返回]: "
 IF NOT DEFINED Reg_Vulue-NewName (
 	ECHO. && ECHO 請輸入新機碼項目名稱! && ECHO. && PAUSE && GOTO Rename-Registry_Vulue-NewName-Ask
-)ELSE IF /I "%Reg_Vulue-NewName%" EQU "E" (
+)ELSE IF /I "%Reg_Vulue-NewName%" EQU "B" (
 	GOTO Rename-Registry_Vulue-Name-Ask
 )
 CALL :Is_Exist_Registry_New_Entries
@@ -735,7 +735,7 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Value_Path="
-SET /P Reg_Value_Path="請輸入要更改的機碼項目值路徑[B/b:Back Menu]: "
+SET /P Reg_Value_Path="請輸入要更改的機碼項目值路徑[B/b:返回主選單]: "
 IF NOT DEFINED Reg_Value_Path (
 	ECHO.
 	ECHO 請輸入機碼項目路徑!
@@ -765,14 +765,14 @@ ECHO =======================================================
 ECHO.
 CALL :ALL_Registry_Value
 SET "Reg_Vulue-Name="
-SET /P Reg_Vulue-Name="請輸入要更改的機碼項目名稱[輸入E 返回]: "
+SET /P Reg_Vulue-Name="請輸入要更改的機碼項目名稱[B/b:返回]: "
 IF NOT DEFINED Reg_Vulue-Name (
 	ECHO.
 	ECHO 請輸入機碼項目名稱!
 	ECHO.
 	PAUSE
 	GOTO Change-Registry_Vulue-Name-Ask
-)ELSE IF /I "%Reg_Vulue-Name%" EQU "E" (
+)ELSE IF /I "%Reg_Vulue-Name%" EQU "B" (
 	GOTO Change-Registry_Vulue-Ask
 )
 
@@ -793,14 +793,14 @@ ECHO.
 ECHO =======================================================
 ECHO.
 SET "Reg_Vulue-NewValue="
-SET /P Reg_Vulue-NewValue="請輸入新的的項目值[輸入E 返回]: "
+SET /P Reg_Vulue-NewValue="請輸入新的的項目值[B/b:返回]: "
 IF NOT DEFINED Reg_Vulue-NewValue (
 	ECHO.
 	ECHO 請輸入新項目值!
 	ECHO.
 	PAUSE
 	GOTO Change-Registry_Vulue-NewValue-Ask
-)ELSE IF /I "%Reg_Vulue-NewValue%" EQU "E" (
+)ELSE IF /I "%Reg_Vulue-NewValue%" EQU "B" (
 	GOTO Change-Registry_Vulue-Name-Ask
 )
 CALL :Change-Registry_Vulue
